@@ -39,7 +39,7 @@ architecture rtl of top_level_vga_test is
 
   -- nael
   signal counterForSpritePositionUpdate : integer range 0 to 180000  := 0;
-  signal counterForSpriteRotationUpdate : integer range 0 to 8000000 := 0;
+  signal counterForSpriteRotationUpdate : integer range 0 to 5000000 := 0;
   signal ticksForSpritePositionUpdate : std_logic := '0';
   signal ticksForDynamicTextPositionUpdate : std_logic := '0';
   signal xPosSprite, yPosSprite : integer := 0;
@@ -49,7 +49,7 @@ architecture rtl of top_level_vga_test is
 
   signal sRotation : RotationType := ZERO;
   signal sRotationClockwise : boolean := true;
-  signal sCounterForRotationChange : integer range 0 to 100000000:= 0;
+  signal sCounterForRotationChange : integer range 0 to 50_000_000:= 0;
 
   component VgaController is
     port (
