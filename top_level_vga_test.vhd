@@ -3,6 +3,8 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use work.VgaUtils.all;
 
+use work.MyPackage.all;
+
 entity top_level_vga_test is
   port (
     clk   : in std_logic; -- Pin 23, 50MHz from the onboard oscilator.
@@ -136,7 +138,8 @@ port map (inClock       => vga_clk,
           inSpritePosY  => squareYVector,
           inCursorX     => hPosVector,
           inCursorY     => vPosVector,
-          outShouldDraw => should_draw_square);
+          outShouldDraw => should_draw_square,
+          inRotation => ZERO);
 
 square_x <= xPosSprite;
 square_y <= yPosSprite;

@@ -2,6 +2,17 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.ALL;
 
+package MyPackage is 
+   type Rotation is (ZERO, HALF_PI, PI, THREE_QUARTERS_PI);
+end package;
+
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.ALL;
+
+library work;
+use work.MyPackage.all;
+
 entity sprite is
    generic (SPRITE_WIDTH   : integer := 7;
             SCALE          : integer := 3;
@@ -18,6 +29,7 @@ entity sprite is
          inSpritePosY  : in std_logic_vector(15 downto 0);  -- center position of sprite in Y
          inCursorX     : in std_logic_vector(15 downto 0);
          inCursorY     : in std_logic_vector(15 downto 0);
+         inRotation    : in Rotation;
          outShouldDraw : out boolean);
 end;
 
@@ -25,6 +37,7 @@ architecture logic of sprite is
    
    constant SPRITE_HEIGHT        : integer := SPRITE_CONTENT'length / SPRITE_WIDTH;
    type SPRITE_CONTENT_TYPE is array (SPRITE_HEIGHT-1 downto 0) of std_logic_vector (SPRITE_WIDTH-1 downto 0);
+
    signal sSpriteContent  : SPRITE_CONTENT_TYPE;
 
    signal sCenterPosX     : integer := 0;
@@ -33,6 +46,23 @@ architecture logic of sprite is
    constant C_HALF_SCALED_WIDTH  : integer := C_SCALED_WIDTH / 2;
    constant C_SCALED_HEIGHT      : integer := SPRITE_HEIGHT * SCALE;
    constant C_HALF_SCALED_HEIGHT : integer := C_SCALED_HEIGHT / 2;
+
+
+    type PositionType is array (0 to 1) of integer;  
+
+    function RotatePosition(x : integer := 0;
+                            y : integer := 0;
+                            rotation : Rotation := ZERO ) return PositionType is 
+        variable newX,newY : integer := 0;
+    begin
+        newX := x;
+        newY := y;
+        return (newX,newY);
+    end function;
+
+
+
+
 begin
 
   RefreshsSpriteContent : process (inClock)
@@ -53,7 +83,9 @@ begin
                             inCursorX,
                             inCursorY)
     variable vCursorX, vCursorY : integer := 0;
-    variable vTranslatedCursorX, vTranslatedCursorY : integer := 0;
+    variable vTranslatedCursor: PositionType := (others => 0);
+    variable sinRotationAngle: integer :=0;
+    variable cosRotationAngle: integer :=1;
   begin
       if not inEnabled then
           outShouldDraw <= false;
@@ -71,9 +103,9 @@ begin
             then
               outShouldDraw <= false;
           else
-             vTranslatedCursorX := (vCursorX - (sCenterPosX - C_HALF_SCALED_WIDTH))  / SCALE;
-             vTranslatedCursorY := (vCursorY - (sCenterPosY - C_HALF_SCALED_HEIGHT)) / SCALE;
-             if sSpriteContent(vTranslatedCursorY)(vTranslatedCursorX) = '1' then
+             vTranslatedCursor := RotatePosition((vCursorX - (sCenterPosX - C_HALF_SCALED_WIDTH))  / SCALE, 
+                                   (vCursorY - (sCenterPosY - C_HALF_SCALED_HEIGHT)) / SCALE);
+             if sSpriteContent(vTranslatedCursor(1))(vTranslatedCursor(0)) = '1' then
                 outShouldDraw <= true;
              else
                 outShouldDraw <= false;
