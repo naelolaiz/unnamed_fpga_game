@@ -131,6 +131,7 @@ generic map(SPRITE_WIDTH => 11,
                              &"00100000100"
                              &"00011111000")
 port map (inClock       => vga_clk,
+          inEnabled     => true,
           inSpritePosX  => squareXVector,
           inSpritePosY  => squareYVector,
           inCursorX     => hPosVector,
