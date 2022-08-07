@@ -3,7 +3,7 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.ALL;
 
 package myPackage is
---type SPRITE_CONTENT is array (ORIGINAL_HEIGHT-1 downto 0) of std_logic_vector (ORIGINAL_WIDTH-1 downto 0);
+--type SPRITE_CONTENT is array (HEIGHT-1 downto 0) of std_logic_vector (SPRITE_WIDTH-1 downto 0);
 --  type my_arr is array(natural range <>) of std_logic_vector;
 end package myPackage;
 
@@ -16,7 +16,7 @@ library work;
 use work.myPackage.all;
 
 entity sprite is
-   generic (ORIGINAL_WIDTH : integer := 7;
+   generic (SPRITE_WIDTH   : integer := 7;
             SCALE          : integer := 3;
             SPRITE_CONTENT : std_logic_vector := "1001001"
                                                & "0101010"
@@ -35,25 +35,25 @@ end;
 
 architecture logic of sprite is
    
-   constant ORIGINAL_HEIGHT        : integer := SPRITE_CONTENT'length / ORIGINAL_WIDTH;
-   type SPRITE_CONTENT_TYPE is array (ORIGINAL_HEIGHT-1 downto 0) of std_logic_vector (ORIGINAL_WIDTH-1 downto 0);
+   constant HEIGHT        : integer := SPRITE_CONTENT'length / SPRITE_WIDTH;
+   type SPRITE_CONTENT_TYPE is array (HEIGHT-1 downto 0) of std_logic_vector (SPRITE_WIDTH-1 downto 0);
    signal sSpriteContent  : SPRITE_CONTENT_TYPE;
 
    signal sCenterPosX     : integer := 0;
    signal sCenterPosY     : integer := 0;
-   constant C_WIDTH       : integer := ORIGINAL_WIDTH * SCALE;
-   constant C_HALF_WIDTH  : integer :=  C_WIDTH / 2;
-   constant C_HEIGHT      : integer := ORIGINAL_HEIGHT * SCALE;
-   constant C_HALF_HEIGHT : integer := C_HEIGHT / 2;
+   constant C_SCALED_WIDTH       : integer := SPRITE_WIDTH * SCALE;
+   constant C_HALF_SCALED_WIDTH  : integer := C_SCALED_WIDTH / 2;
+   constant C_SCALED_HEIGHT      : integer := HEIGHT * SCALE;
+   constant C_HALF_SCALED_HEIGHT : integer := C_SCALED_HEIGHT / 2;
 begin
 
   RefreshsSpriteContent : process (inClock)
     variable oneDimensionalPointer: integer := 0;
   begin
     -- TODO : assert proper height and width
-    for i in ORIGINAL_HEIGHT-1 downto 0 loop
-       oneDimensionalPointer := i*ORIGINAL_WIDTH;
-       sSpriteContent(i) <= SPRITE_CONTENT(oneDimensionalPointer to oneDimensionalPointer+ORIGINAL_WIDTH-1);
+    for i in HEIGHT-1 downto 0 loop
+       oneDimensionalPointer := i*SPRITE_WIDTH;
+       sSpriteContent(i) <= SPRITE_CONTENT(oneDimensionalPointer to oneDimensionalPointer+SPRITE_WIDTH-1);
     end loop;
   end process;
   ProcessPosition : process(inClock,
@@ -71,15 +71,15 @@ begin
           vCursorX := to_integer(unsigned(inCursorX));
           vCursorY := to_integer(unsigned(inCursorY));
 
-          if   vCursorX < (sCenterPosX - C_HALF_WIDTH)
-            or vCursorX > (sCenterPosX + C_HALF_WIDTH)
-            or vCursorY < (sCenterPosY - C_HALF_HEIGHT)
-            or vCursorY > (sCenterPosY + C_HALF_HEIGHT)
+          if   vCursorX < (sCenterPosX - C_HALF_SCALED_WIDTH)
+            or vCursorX > (sCenterPosX + C_HALF_SCALED_WIDTH)
+            or vCursorY < (sCenterPosY - C_HALF_SCALED_HEIGHT)
+            or vCursorY > (sCenterPosY + C_HALF_SCALED_HEIGHT)
             then
               outShouldDraw <= false;
           else
-             vTranslatedCursorX := (vCursorX - (sCenterPosX - C_HALF_WIDTH))  / SCALE;
-             vTranslatedCursorY := (vCursorY - (sCenterPosY - C_HALF_HEIGHT)) / SCALE;
+             vTranslatedCursorX := (vCursorX - (sCenterPosX - C_HALF_SCALED_WIDTH))  / SCALE;
+             vTranslatedCursorY := (vCursorY - (sCenterPosY - C_HALF_SCALED_HEIGHT)) / SCALE;
              if sSpriteContent(vTranslatedCursorY)(vTranslatedCursorX) = '1' then
                 outShouldDraw <= true;
              else

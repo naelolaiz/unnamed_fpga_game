@@ -117,11 +117,24 @@ begin
 end process;
 
 mySprite : entity work.sprite(logic)
-port map (inClock => vga_clk,
-          inSpritePosX => squareXVector,
-          inSpritePosY => squareYVector,
-          inCursorX => hPosVector,
-          inCursorY => vPosVector,
+generic map(SPRITE_WIDTH => 11,
+            SCALE => 5,
+            SPRITE_CONTENT => "00011111000"
+                             &"00100000100"
+                             &"01000000010"
+                             &"10010001001"
+                             &"10000000001"
+                             &"10000100001"
+                             &"10100000101"
+                             &"10010001001"
+                             &"01001110010"
+                             &"00100000100"
+                             &"00011111000")
+port map (inClock       => vga_clk,
+          inSpritePosX  => squareXVector,
+          inSpritePosY  => squareYVector,
+          inCursorX     => hPosVector,
+          inCursorY     => vPosVector,
           outShouldDraw => should_draw_square);
 
 square_x <= xPosSprite;
