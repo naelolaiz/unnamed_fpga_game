@@ -6,3 +6,4 @@ game using vga
 * integrate input buttons with debouncers
 * use vectors for sprites velocities. Instantiate several sprites.
 * animate sprites
+* add testbench
