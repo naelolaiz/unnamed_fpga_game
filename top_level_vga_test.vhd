@@ -38,13 +38,16 @@ architecture rtl of top_level_vga_test is
   signal should_draw_square : boolean;
 
   -- nael
-  signal counterForSpritePositionUpdate : integer range 0 to 12500000 := 0;
+  signal counterForSpritePositionUpdate : integer range 0 to 180000   := 0;
+  signal counterForSpriteRotationUpdate : integer range 0 to 25000000 := 0;
   signal ticksForSpritePositionUpdate : std_logic := '0';
   signal ticksForDynamicTextPositionUpdate : std_logic := '0';
   signal xPosSprite, yPosSprite : integer := 0;
   signal xPosNael, yPosNael : integer := 5;
   signal xDirectionSprite, yDirectionSprite : boolean := true; 
   signal xDirectionText, yDirectionText : boolean := true; 
+
+  signal sRotation : RotationType := ZERO;
 
   component VgaController is
     port (
@@ -67,7 +70,7 @@ squareYVector <= std_logic_vector(to_unsigned(square_y, 16));
 TickProcess : process (clk)
 begin
     if (rising_edge(clk)) then
-       if counterForSpritePositionUpdate = 180000 then
+       if counterForSpritePositionUpdate = counterForSpritePositionUpdate'HIGH then
           counterForSpritePositionUpdate <= 0;
 	  ticksForSpritePositionUpdate <= not ticksForSpritePositionUpdate;
        else
@@ -76,6 +79,25 @@ begin
     end if;
 end process;
 
+rotateSprite : process  (clk, counterForSpritePositionUpdate)
+begin
+    if rising_edge(clk) then
+       if counterForSpriteRotationUpdate = counterForSpriteRotationUpdate'HIGH then
+          counterForSpriteRotationUpdate <= 0;
+          if sRotation = ZERO then
+            sRotation <= HALF_PI;
+          elsif sRotation = HALF_PI then
+            sRotation <= PI;
+          elsif sRotation = PI then
+            sRotation <= THREE_HALFS_PI;
+          else
+            sRotation <= ZERO;
+          end if;
+       else
+          counterForSpriteRotationUpdate <= counterForSpriteRotationUpdate + 1;
+       end if;
+    end if;
+end process;
 
 moveSprite : process (ticksForSpritePositionUpdate)
 begin
@@ -139,7 +161,7 @@ port map (inClock       => vga_clk,
           inCursorX     => hPosVector,
           inCursorY     => vPosVector,
           outShouldDraw => should_draw_square,
-          inRotation => ZERO);
+          inRotation => sRotation);
 
 square_x <= xPosSprite;
 square_y <= yPosSprite;
