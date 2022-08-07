@@ -63,13 +63,13 @@ architecture logic of sprite is
             newY := y;
           when HALF_PI => --sinRotationAngle := 1; cosRotationAngle :=0;
             newX := y;
-            newY := (SPRITE_WIDTH-1) - x;
+            newY := x;
           when PI      => --sinRotationAngle := 0; cosRotationAngle :=-1;
             newY := (SPRITE_HEIGHT-1) -y;
             newX := x;
           when THREE_HALFS_PI  => --sinRotationAngle := -1; cosRotationAngle :=0;
             newX := y;
-            newY := x;
+            newY := (SPRITE_WIDTH-1) - x;
         end case;
         -- first we displace the center
 --        newX := x; -- ;SPRITE_WIDTH * cosRotationAngle;

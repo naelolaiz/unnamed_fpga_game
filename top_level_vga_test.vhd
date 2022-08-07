@@ -38,8 +38,8 @@ architecture rtl of top_level_vga_test is
   signal should_draw_square : boolean;
 
   -- nael
-  signal counterForSpritePositionUpdate : integer range 0 to 180000   := 0;
-  signal counterForSpriteRotationUpdate : integer range 0 to 25000000 := 0;
+  signal counterForSpritePositionUpdate : integer range 0 to 180000  := 0;
+  signal counterForSpriteRotationUpdate : integer range 0 to 8000000 := 0;
   signal ticksForSpritePositionUpdate : std_logic := '0';
   signal ticksForDynamicTextPositionUpdate : std_logic := '0';
   signal xPosSprite, yPosSprite : integer := 0;
@@ -48,6 +48,8 @@ architecture rtl of top_level_vga_test is
   signal xDirectionText, yDirectionText : boolean := true; 
 
   signal sRotation : RotationType := ZERO;
+  signal sRotationClockwise : boolean := true;
+  signal sCounterForRotationChange : integer range 0 to 100000000:= 0;
 
   component VgaController is
     port (
@@ -79,22 +81,41 @@ begin
     end if;
 end process;
 
-rotateSprite : process  (clk, counterForSpritePositionUpdate)
+rotateSprite : process  (clk, counterForSpritePositionUpdate, sRotationClockwise)
+
 begin
     if rising_edge(clk) then
        if counterForSpriteRotationUpdate = counterForSpriteRotationUpdate'HIGH then
           counterForSpriteRotationUpdate <= 0;
-          if sRotation = ZERO then
-            sRotation <= HALF_PI;
-          elsif sRotation = HALF_PI then
-            sRotation <= PI;
-          elsif sRotation = PI then
-            sRotation <= THREE_HALFS_PI;
+          if sRotationClockwise then
+              if sRotation = ZERO then
+                sRotation <= HALF_PI;
+              elsif sRotation = HALF_PI then
+                sRotation <= PI;
+              elsif sRotation = PI then
+                sRotation <= THREE_HALFS_PI;
+              else
+                sRotation <= ZERO;
+              end if;
           else
-            sRotation <= ZERO;
+              if sRotation = ZERO then
+                sRotation <= THREE_HALFS_PI;
+              elsif sRotation = THREE_HALFS_PI then
+                sRotation <= PI;
+              elsif sRotation = PI then
+                sRotation <= HALF_PI;
+              else
+                sRotation <= ZERO;
+              end if;
           end if;
        else
           counterForSpriteRotationUpdate <= counterForSpriteRotationUpdate + 1;
+       end if;
+       if sCounterForRotationChange = sCounterForRotationChange'HIGH then
+          sCounterForRotationChange <= 0;
+          sRotationClockwise <= not sRotationClockwise;
+       else
+          sCounterForRotationChange <= sCounterForRotationChange + 1;
        end if;
     end if;
 end process;
