@@ -11,6 +11,8 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.ALL;
 
 library work;
+library ieee_proposed;
+use ieee_proposed.fixed_pkg.all;
 use work.MyPackage.all;
 
 entity sprite is
@@ -42,6 +44,8 @@ architecture logic of sprite is
 
    signal sCenterPosX     : integer := 0;
    signal sCenterPosY     : integer := 0;
+   constant HALF_SPRITE_WIDTH    : integer := SPRITE_WIDTH / 2;
+   constant HALF_SPRITE_HEIGHT   : integer := SPRITE_HEIGHT / 2;
    constant C_SCALED_WIDTH       : integer := SPRITE_WIDTH * SCALE;
    constant C_HALF_SCALED_WIDTH  : integer := C_SCALED_WIDTH / 2;
    constant C_SCALED_HEIGHT      : integer := SPRITE_HEIGHT * SCALE;
@@ -49,31 +53,36 @@ architecture logic of sprite is
 
 
     type PositionType is array (0 to 1) of integer;  
--- this only works for squared sprites. TODO: handling non squared ones! and create proper sin and cos tables for proper rotation
     function RotatePosition(x : integer;
                             y : integer;
                             rotation : RotationType := ZERO ) return PositionType is 
         variable newX,newY : integer := 0;
-        variable sinRotationAngle: integer :=0;
-        variable cosRotationAngle: integer :=1;
+        variable sinRotationAngle : sfixed (2 downto -6) := to_sfixed(0.0, 2, -6);
+        variable cosRotationAngle : sfixed (2 downto -6) := to_sfixed(1.0, 2, -6); 
     begin
         case rotation is 
-          when ZERO    => --sinRotationAngle := 0; cosRotationAngle :=1;
-            newX := x;
-            newY := y;
-          when HALF_PI => --sinRotationAngle := 1; cosRotationAngle :=0;
-            newX := y;
-            newY := x;
-          when PI      => --sinRotationAngle := 0; cosRotationAngle :=-1;
-            newY := (SPRITE_HEIGHT-1) -y;
-            newX := x;
-          when THREE_HALFS_PI  => --sinRotationAngle := -1; cosRotationAngle :=0;
-            newX := y;
-            newY := (SPRITE_WIDTH-1) - x;
+          when ZERO    => 
+            sinRotationAngle := to_sfixed(0.0, 2, -6);
+            cosRotationAngle := to_sfixed(1.0, 2, -6);
+          when HALF_PI => 
+            sinRotationAngle := to_sfixed(1.0, 2, -6);
+            cosRotationAngle := to_sfixed(0.0, 2, -6);
+          when PI      => 
+            sinRotationAngle := to_sfixed(0.0, 2, -6);
+            cosRotationAngle := to_sfixed(-1.0, 2, -6);
+          when THREE_HALFS_PI  =>
+            sinRotationAngle := to_sfixed(-1.0, 2, -6);
+            cosRotationAngle := to_sfixed(0.0, 2, -6);
         end case;
-        -- first we displace the center
---        newX := x; -- ;SPRITE_WIDTH * cosRotationAngle;
---        newY := y;
+ -- first we do a translation to center the input
+        newX := x - HALF_SPRITE_WIDTH;
+        newY := y - HALF_SPRITE_HEIGHT;
+ -- then we rotate
+        newX := (newX * to_integer(signed(to_slv(cosRotationAngle))) - (newY * to_integer(signed(to_slv(sinRotationAngle))) * SPRITE_WIDTH / SPRITE_HEIGHT)) / 64;
+        newY := ((newX * to_integer(signed(to_slv(sinRotationAngle))) * SPRITE_HEIGHT / SPRITE_WIDTH) + (newY * to_integer(signed(to_slv(cosRotationAngle))))) / 64;
+ -- and retranslate
+        newX := newX + HALF_SPRITE_WIDTH;
+        newY := newY + HALF_SPRITE_HEIGHT;
         return (newX,newY);
     end function;
 
@@ -119,8 +128,8 @@ begin
               outShouldDraw <= false;
           else
              vTranslatedCursor := RotatePosition((vCursorX - (sCenterPosX - C_HALF_SCALED_WIDTH))  / SCALE, 
-                                   (vCursorY - (sCenterPosY - C_HALF_SCALED_HEIGHT)) / SCALE,
-                                   inRotation);
+                                                 (vCursorY - (sCenterPosY - C_HALF_SCALED_HEIGHT)) / SCALE,
+                                                 inRotation);
              if sSpriteContent(vTranslatedCursor(1))(vTranslatedCursor(0)) = '1' then
                 outShouldDraw <= true;
              else

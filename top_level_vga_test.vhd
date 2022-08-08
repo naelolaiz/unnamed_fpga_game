@@ -35,11 +35,12 @@ architecture rtl of top_level_vga_test is
 
   signal square_speed_count : integer range 0 to SQUARE_SPEED        := 0;
   signal should_move_square : boolean;
-  signal should_draw_square : boolean;
+  signal should_draw_square1 : boolean;
+  signal should_draw_square2 : boolean;
 
   -- nael
-  signal counterForSpritePositionUpdate : integer range 0 to 180000  := 0;
-  signal counterForSpriteRotationUpdate : integer range 0 to 5000000 := 0;
+  signal counterForSpritePositionUpdate : integer range 0 to 180E3  := 0;
+  signal counterForSpriteRotationUpdate : integer range 0 to 10E6 := 0;
   signal ticksForSpritePositionUpdate : std_logic := '0';
   signal ticksForDynamicTextPositionUpdate : std_logic := '0';
   signal xPosSprite, yPosSprite : integer := 0;
@@ -49,7 +50,8 @@ architecture rtl of top_level_vga_test is
 
   signal sRotation : RotationType := ZERO;
   signal sRotationClockwise : boolean := true;
-  signal sCounterForRotationChange : integer range 0 to 50_000_000:= 0;
+  signal sCounterForRotationChange : integer range 0 to 85E6:= 0;
+  signal sSmiley1Enabled : boolean := true;
 
   component VgaController is
     port (
@@ -111,9 +113,11 @@ begin
        else
           counterForSpriteRotationUpdate <= counterForSpriteRotationUpdate + 1;
        end if;
+
        if sCounterForRotationChange = sCounterForRotationChange'HIGH then
           sCounterForRotationChange <= 0;
           sRotationClockwise <= not sRotationClockwise;
+          sSmiley1Enabled <= not sSmiley1Enabled;
        else
           sCounterForRotationChange <= sCounterForRotationChange + 1;
        end if;
@@ -176,14 +180,47 @@ generic map(SPRITE_WIDTH => 11,
                              &"00100000100"
                              &"00011111000")
 port map (inClock       => vga_clk,
-          inEnabled     => true,
+          inEnabled     => sSmiley1Enabled,
           inSpritePosX  => squareXVector,
           inSpritePosY  => squareYVector,
           inCursorX     => hPosVector,
           inCursorY     => vPosVector,
-          outShouldDraw => should_draw_square,
+          outShouldDraw => should_draw_square1,
           inRotation => sRotation);
 
+mySprite2 : entity work.sprite(logic)
+generic map(SPRITE_WIDTH => 11,
+            SCALE => 5,
+            SPRITE_CONTENT => "00011111000"
+                             &"00100000100"
+                             &"01000000010"
+                             &"10010001001"
+                             &"10000100001"
+                             &"10000000001"
+                             &"10011111001"
+                             &"10100000101"
+                             &"01000000010"
+                             &"00100000100"
+                             &"00011111000")
+           --  SPRITE_CONTENT => "00011111000"
+           --                   &"00100000100"
+           --                   &"01000000010"
+           --                   &"10010001001"
+           --                   &"10000100001"
+           --                   &"10000000001"
+           --                   &"10001110001"
+           --                   &"10010001001"
+           --                   &"01001110010"
+           --                   &"00100000100"
+           --                   &"00011111000")
+port map (inClock       => vga_clk,
+          inEnabled     => not sSmiley1Enabled,
+          inSpritePosX  => squareXVector,
+          inSpritePosY  => squareYVector,
+          inCursorX     => hPosVector,
+          inCursorY     => vPosVector,
+          outShouldDraw => should_draw_square2,
+          inRotation => sRotation);
 square_x <= xPosSprite;
 square_y <= yPosSprite;
 
@@ -209,12 +246,14 @@ square_y <= yPosSprite;
     end if;
   end process;
 
-  process (vga_clk)
+  process (vga_clk, should_draw_square1, should_draw_square2)
 --  variable tempColorSum : std_logic_vector(2 downto 0) := "000";
   begin
     if rising_edge(vga_clk) then
-      if should_draw_square then
-        rgb_input <= "111";
+      if should_draw_square1 then
+        rgb_input <= "010";
+      elsif should_draw_square2 then
+        rgb_input <= "001";
       else   
         rgb_input <= "000";
       end if;
