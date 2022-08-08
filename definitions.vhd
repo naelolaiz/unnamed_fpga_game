@@ -1,5 +1,6 @@
 library ieee;
-use ieee.std_logic_1164;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.ALL;
 
 library ieee_proposed;
 use ieee_proposed.fixed_pkg.all;
@@ -135,12 +136,12 @@ package body definitions is
      function rotate(sprite_size : Size2D;
                      position    : Pos2D;
                      rotation    : AngleType := ( others => '0' )) return Pos2D is
-        constant trig_functions  : TrigFunctionSFixedResultType := getTrigonometricFunctionsResult(rotation);
+        constant trigResults  : TrigonometricFunctionsResultsRecord := getTrigonometricFunctionsResult(rotation);
         variable newPos : Pos2D;
      begin
-       -- reinterpret  as ufixed
-        newPos.x := (x * to_integer(unsigned(to_slv(trig_functions.cos))) - (y * to_integer(unsigned(to_slv(trig_functions.sin))) * sprite_size.width / sprite_size.height)) / 64;
-        newPos.y := ((x * to_integer(unsigned(to_slv(sinRotationAngle))) * sprite_size.height / sprite_size.width) + (y * to_integer(signed(to_slv(cosRotationAngle))))) / 64;
+       -- reinterpret  as sfixed
+        newPos.x := (position.x * to_integer(signed(to_slv(trigResults.cos))) - (position.y * to_integer(signed(to_slv(trigResults.sin))) * sprite_size.width / sprite_size.height)) / 64;
+        newPos.y := ((position.x * to_integer(signed(to_slv(trigResults.sin))) * sprite_size.height / sprite_size.width) + (position.y * to_integer(signed(to_slv(trigResults.cos))))) / 64;
         return newPos;
      end function;
     
