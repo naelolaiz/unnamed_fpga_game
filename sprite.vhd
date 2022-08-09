@@ -49,22 +49,20 @@ begin
        if rising_edge(inClock) then
           if counterForSpriteRotationUpdate = counterForSpriteRotationUpdate'HIGH then
              counterForSpriteRotationUpdate := 0;
-             if ROTATION_UPDATE_PERIOD > 0 then -- clockwise
-                 if indexForSpriteRotation = indexForSpriteRotation'HIGH-1 then
+             if ROTATION_UPDATE_PERIOD < 0 then -- counterclockwise
+                 if indexForSpriteRotation = indexForSpriteRotation'HIGH then
                     indexForSpriteRotation := 0;
-                    sRotation <= TRIGONOMETRIC_FUNCTIONS_TABLE(indexForSpriteRotation).angle;
                  else
                     indexForSpriteRotation := indexForSpriteRotation + 1;
                  end if;
-             elsif ROTATION_UPDATE_PERIOD < 0 then -- counterclockwise
-                 if indexForSpriteRotation = 1 then
+             elsif ROTATION_UPDATE_PERIOD > 0 then -- clockwise
+                 if indexForSpriteRotation = 0 then
                     indexForSpriteRotation := indexForSpriteRotation'HIGH;
-                    sRotation <= TRIGONOMETRIC_FUNCTIONS_TABLE(indexForSpriteRotation).angle;
                  else
                     indexForSpriteRotation := indexForSpriteRotation - 1;
                  end if;
-             else
              end if;
+             sRotation <= TRIGONOMETRIC_FUNCTIONS_TABLE(indexForSpriteRotation).angle;
           else
              counterForSpriteRotationUpdate := counterForSpriteRotationUpdate + 1;
           end if;

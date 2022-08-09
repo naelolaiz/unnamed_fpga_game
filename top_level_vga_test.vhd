@@ -130,43 +130,44 @@ generic map(SPRITE_WIDTH => 11,
                              &"10010001001"
                              &"01001110010"
                              &"00100000100"
-                             &"00011111000")
+                             &"00011111000",
+            ROTATION_UPDATE_PERIOD => 10000000 )
 port map (inClock       => vga_clk,
           inEnabled     => true,
           inSpritePos   => spritePosition,
           inCursorPos   => cursorPosition,
           outShouldDraw => should_draw_square1);
 
-mySprite2 : entity work.sprite(logic)
-generic map(SPRITE_WIDTH => 11,
-            SCALE => 16,
-            SPRITE_CONTENT => "00011111000"
-                             &"00100000100"
-                             &"01000000010"
-                             &"10010001001"
-                             &"10000100001"
-                             &"10000000001"
-                             &"10011111001"
-                             &"10100000101"
-                             &"01000000010"
-                             &"00100000100"
-                             &"00011111000")
-           --  SPRITE_CONTENT => "00011111000"
-           --                   &"00100000100"
-           --                   &"01000000010"
-           --                   &"10010001001"
-           --                   &"10000100001"
-           --                   &"10000000001"
-           --                   &"10001110001"
-           --                   &"10010001001"
-           --                   &"01001110010"
-           --                   &"00100000100"
-           --                   &"00011111000")
-port map (inClock       => vga_clk,
-          inEnabled     => not sSmiley1Enabled,
-          inSpritePos   => spritePosition,
-          inCursorPos   => cursorPosition,
-          outShouldDraw => should_draw_square2);
+ -- mySprite2 : entity work.sprite(logic)
+ -- generic map(SPRITE_WIDTH => 11,
+ --             SCALE => 16,
+ --             SPRITE_CONTENT => "00011111000"
+ --                              &"00100000100"
+ --                              &"01000000010"
+ --                              &"10010001001"
+ --                              &"10000100001"
+ --                              &"10000000001"
+ --                              &"10011111001"
+ --                              &"10100000101"
+ --                              &"01000000010"
+ --                              &"00100000100"
+ --                              &"00011111000")
+ --            --  SPRITE_CONTENT => "00011111000"
+ --            --                   &"00100000100"
+ --            --                   &"01000000010"
+ --            --                   &"10010001001"
+ --            --                   &"10000100001"
+ --            --                   &"10000000001"
+ --            --                   &"10001110001"
+ --            --                   &"10010001001"
+ --            --                   &"01001110010"
+ --            --                   &"00100000100"
+ --            --                   &"00011111000")
+ -- port map (inClock       => vga_clk,
+ --           inEnabled     => not sSmiley1Enabled,
+ --           inSpritePos   => spritePosition,
+ --           inCursorPos   => cursorPosition,
+ --           outShouldDraw => should_draw_square2);
 square_x <= xPosSprite;
 square_y <= yPosSprite;
 
