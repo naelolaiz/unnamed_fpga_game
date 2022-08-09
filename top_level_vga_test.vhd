@@ -18,11 +18,8 @@ architecture rtl of top_level_vga_test is
   constant SQUARE_SPEED : integer := 100_000;
 
 
-constant SCREEN_SIZE : Size2D  := (1024,768);
-constant MARGIN_X0 : integer := 30;
-constant MARGIN_X1 : integer := MARGIN_X0 + SCREEN_SIZE.width;
-constant MARGIN_Y0 : integer := 10;
-constant MARGIN_Y1 : integer := MARGIN_Y0 + SCREEN_SIZE.height;
+constant SCREEN_SIZE    : Size2D := (640,480);
+constant SCREEN_MARGINS : Pos2D  := (155,30);
 
 
   -- VGA Clock - 25 MHz clock derived from the 50MHz built-in clock
@@ -67,26 +64,7 @@ constant MARGIN_Y1 : integer := MARGIN_Y0 + SCREEN_SIZE.height;
   end component;
 begin
 
- -- updateCursorPosition : process (clk, hpos, vpos)
- -- variable x,y : integer := 0;
- -- variable needsUpdate : boolean := false;
- -- begin
- --    if rising_edge(clk) then
- --       needsUpdate := false;
- --       if hpos > MARGIN_X0 and hpos < MARGIN_X1 then
- --         x := hpos - MARGIN_X0;
- --         needsUpdate := true;
- --       end if;
- --       if vpos > MARGIN_Y0 and vpos < MARGIN_Y1 then
- --         needsUpdate := true;
- --       end if;
- --       if needsUpdate then
- --          cursorPosition <= (x,y);
- --       end if;
- --    end if;
- -- end process;
-
- cursorPosition <= (hpos - MARGIN_X0, vpos - MARGIN_Y0);
+cursorPosition <= (hpos - SCREEN_MARGINS.x, vpos - SCREEN_MARGINS.y);
 
 mySprite : entity work.sprite(logic)
 generic map(SCREEN_SIZE => SCREEN_SIZE,
@@ -105,7 +83,7 @@ generic map(SCREEN_SIZE => SCREEN_SIZE,
                              &"01001110010"
                              &"00100000100"
                              &"00011111000",
-            ROTATION_UPDATE_PERIOD => 10000000 )
+            INITIAL_ROTATION_SPEED => (1, 10000000))
 port map (inClock       => vga_clk,
           inEnabled     => true,
           --inSpritePos   => spritePosition,

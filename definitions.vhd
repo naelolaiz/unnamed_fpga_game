@@ -20,13 +20,21 @@ package definitions is
       update_period : integer;
    end record;
 
+   subtype AngleType                    is ufixed (2 downto -5); -- unsigned q3.5 for angle (enough for 0..2*PI)
+
+   type RotationSpeed is
+   record
+      --angle_inc: AngleType; -- TODO!
+      index_inc : integer;
+      update_period : integer;
+   end record;
+
    type Size2D is
    record
       width  : integer;
       height : integer;
    end record;
 
-   subtype AngleType                    is ufixed (2 downto -5); -- unsigned q3.5 for angle (enough for 0..2*PI)
    subtype TrigFunctionSFixedResultType is sfixed (1 downto -6); -- signed q2.6 for results of sin and cos
 
    type TrigonometricFunctionsResultsRecord is

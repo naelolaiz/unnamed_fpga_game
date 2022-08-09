@@ -20,7 +20,7 @@ entity sprite is
                                                & "0101010"
                                                & "1001001";
             INITIAL_ROTATION         : AngleType := (others=>'0');
-            ROTATION_UPDATE_PERIOD   : integer := 0; -- rotation speed: counter for input clock to increase angle. Zero for static. Negative for counterclockwise.
+            INITIAL_ROTATION_SPEED           : RotationSpeed := ( 1, 0);
             INITIAL_POSITION         : Pos2D   := (0, 0);
             INITIAL_SPEED            : Speed2D := (0, 0, 0)
             );
@@ -45,26 +45,27 @@ architecture logic of sprite is
    signal sSpritePos : Pos2D := (INITIAL_POSITION.x,
                                   INITIAL_POSITION.y);
    signal sCurrentSpeed : Speed2D := INITIAL_SPEED;
+   signal sCurrentRotationSpeed : RotationSpeed := INITIAL_ROTATION_SPEED;
 begin
 
    rotateSprite : process  (inClock)
-      variable counterForSpriteRotationUpdate : integer range 0 to ROTATION_UPDATE_PERIOD := 0;
+      variable counterForSpriteRotationUpdate : integer := 0;
       variable indexForSpriteRotation : integer range 0 to TRIGONOMETRIC_FUNCTIONS_TABLE'LENGTH-1;
    begin
        if rising_edge(inClock) then
-          if counterForSpriteRotationUpdate = counterForSpriteRotationUpdate'HIGH then
+          if counterForSpriteRotationUpdate = sCurrentRotationSpeed.update_period then
              counterForSpriteRotationUpdate := 0;
-             if ROTATION_UPDATE_PERIOD < 0 then -- counterclockwise
+             if sCurrentRotationSpeed.index_inc < 0 then -- counterclockwise
                  if indexForSpriteRotation = indexForSpriteRotation'HIGH then
                     indexForSpriteRotation := 0;
                  else
-                    indexForSpriteRotation := indexForSpriteRotation + 1;
+                    indexForSpriteRotation := indexForSpriteRotation + sCurrentRotationSpeed.index_inc;
                  end if;
-             elsif ROTATION_UPDATE_PERIOD > 0 then -- clockwise
+             elsif sCurrentRotationSpeed.index_inc > 0 then -- clockwise
                  if indexForSpriteRotation = 0 then
                     indexForSpriteRotation := indexForSpriteRotation'HIGH;
                  else
-                    indexForSpriteRotation := indexForSpriteRotation - 1;
+                    indexForSpriteRotation := indexForSpriteRotation + sCurrentRotationSpeed.index_inc;
                  end if;
              end if;
              sRotation <= TRIGONOMETRIC_FUNCTIONS_TABLE(indexForSpriteRotation).angle;
@@ -78,8 +79,10 @@ begin
    moveSprite : process (inClock)
       variable counterForSpritePositionUpdate : integer range 0 to INITIAL_SPEED.update_period := 0;
       variable nextPositionToTest : Pos2D := (0,0);
+      variable collisionDetected : boolean := false;
    begin
       if rising_edge(inClock) then
+         collisionDetected := false;
          if counterForSpritePositionUpdate = counterForSpritePositionUpdate'HIGH then
             counterForSpritePositionUpdate := 0;
            -- check for colission with the screen
@@ -89,13 +92,18 @@ begin
             if  nextPositionToTest.x - C_HALF_SCALED_WIDTH <= 0
              or nextPositionToTest.x + C_HALF_SCALED_WIDTH >= SCREEN_SIZE.width then
                sCurrentSpeed.x <= sCurrentSpeed.x * (-1);
+               collisionDetected := true;
             end if;
             if  nextPositionToTest.y - C_HALF_SCALED_HEIGHT <= 0
              or nextPositionToTest.y + C_HALF_SCALED_HEIGHT >= SCREEN_SIZE.height then
                sCurrentSpeed.y <= sCurrentSpeed.y * (-1);
+               collisionDetected := true;
             end if;
             sSpritePos <= ((sSpritePos.x + sCurrentSpeed.x),
                            (sSpritePos.y + sCurrentSpeed.y));
+            if collisionDetected then
+               sCurrentRotationSpeed.index_inc <= sCurrentRotationSpeed.index_inc * (-1); 
+            end if;
 
          else
             counterForSpritePositionUpdate := counterForSpritePositionUpdate + 1;
