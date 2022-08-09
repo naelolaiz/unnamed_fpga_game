@@ -74,7 +74,7 @@ begin
              -- for rotation, first we do a translation to have the origin in the center of the sprite
              vTranslatedCursor := translateOriginToCenterOfSprite(SPRITE_SIZE, vTranslatedCursor);
              -- then we apply the rotation
-             vTranslatedCursor := rotate(SPRITE_SIZE, vTranslatedCursor, inRotation);
+             -- vTranslatedCursor := rotate(SPRITE_SIZE, vTranslatedCursor, inRotation);
              -- and translate the origin back
              vTranslatedCursor := translateOriginBackToFirstBitCorner(SPRITE_SIZE, vTranslatedCursor);
              -- now we check the sprite content with the transformed cursor
