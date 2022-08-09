@@ -158,7 +158,7 @@ end process;
 
 mySprite : entity work.sprite(logic)
 generic map(SPRITE_WIDTH => 11,
-            SCALE => 5,
+            SCALE => 16,
             SPRITE_CONTENT => "00011111000"
                              &"00100000100"
                              &"01000000010"
@@ -171,7 +171,7 @@ generic map(SPRITE_WIDTH => 11,
                              &"00100000100"
                              &"00011111000")
 port map (inClock       => vga_clk,
-          inEnabled     => sSmiley1Enabled,
+          inEnabled     => true,
           inSpritePos   => spritePosition,
           inCursorPos   => cursorPosition,
           outShouldDraw => should_draw_square1,
@@ -179,7 +179,7 @@ port map (inClock       => vga_clk,
 
 mySprite2 : entity work.sprite(logic)
 generic map(SPRITE_WIDTH => 11,
-            SCALE => 5,
+            SCALE => 16,
             SPRITE_CONTENT => "00011111000"
                              &"00100000100"
                              &"01000000010"
@@ -234,16 +234,18 @@ square_y <= yPosSprite;
   end process;
 
   process (vga_clk, should_draw_square1, should_draw_square2)
---  variable tempColorSum : std_logic_vector(2 downto 0) := "000";
+  variable tempColorSum : std_logic_vector(2 downto 0) := "000";
   begin
     if rising_edge(vga_clk) then
+      tempColorSum := "000";
       if should_draw_square1 then
-        rgb_input <= "010";
-      elsif should_draw_square2 then
-        rgb_input <= "001";
-      else   
-        rgb_input <= "000";
+        tempColorSum := "010";
+      end if;
+      if should_draw_square2 then
+        tempColorSum := tempColorSum or "001";
       end if;
     end if;
+    rgb_input <= tempColorSum; 
   end process;
+
 end architecture;
