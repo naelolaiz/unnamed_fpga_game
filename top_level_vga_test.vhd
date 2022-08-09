@@ -2,8 +2,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use work.VgaUtils.all;
-
-use work.MyPackage.all;
+use work.definitions.all;
 
 entity top_level_vga_test is
   port (
@@ -29,9 +28,9 @@ architecture rtl of top_level_vga_test is
   signal square_x           : integer range HDATA_BEGIN to HDATA_END := HDATA_BEGIN + H_HALF - SQUARE_SIZE/2;
   signal square_y           : integer range VDATA_BEGIN to VDATA_END := VDATA_BEGIN + V_HALF - SQUARE_SIZE/2;
 
+  signal cursorPosition      : Pos2D;
   signal hPosVector, vPosVector : std_logic_vector(15 downto 0) := (others => '0');
-  signal squareXVector      : std_logic_vector(15 downto 0) := (others => '0');
-  signal squareYVector      : std_logic_vector(15 downto 0) := (others => '0');
+  signal spritePosition      : Pos2D;
 
   signal square_speed_count : integer range 0 to SQUARE_SPEED        := 0;
   signal should_move_square : boolean;
@@ -40,7 +39,6 @@ architecture rtl of top_level_vga_test is
 
   -- nael
   signal counterForSpritePositionUpdate : integer range 0 to 180E3  := 0;
-  signal counterForSpriteRotationUpdate : integer range 0 to 10E6 := 0;
   signal ticksForSpritePositionUpdate : std_logic := '0';
   signal ticksForDynamicTextPositionUpdate : std_logic := '0';
   signal xPosSprite, yPosSprite : integer := 0;
@@ -48,7 +46,7 @@ architecture rtl of top_level_vga_test is
   signal xDirectionSprite, yDirectionSprite : boolean := true; 
   signal xDirectionText, yDirectionText : boolean := true; 
 
-  signal sRotation : RotationType := ZERO;
+  signal sRotation : AngleType := (others=>'0');
   signal sRotationClockwise : boolean := true;
   signal sCounterForRotationChange : integer range 0 to 85E6:= 0;
   signal sSmiley1Enabled : boolean := true;
@@ -66,10 +64,8 @@ architecture rtl of top_level_vga_test is
   end component;
 begin
 
-hPosVector <= std_logic_vector(to_unsigned(hpos, 16));
-vPosVector <= std_logic_vector(to_unsigned(vpos, 16));
-squareXVector <= std_logic_vector(to_unsigned(square_x, 16));
-squareYVector <= std_logic_vector(to_unsigned(square_y, 16));
+cursorPosition <= (hpos, vpos);
+spritePosition <= (square_x, square_y);
 
 TickProcess : process (clk)
 begin
@@ -83,35 +79,30 @@ begin
     end if;
 end process;
 
-rotateSprite : process  (clk, counterForSpritePositionUpdate, sRotationClockwise)
-
+rotateSprite : process  (clk, sRotationClockwise)
+variable counterForSpriteRotationUpdate : integer range 0 to 10E6 := 0;
+variable indexForSpriteRotation : integer range 0 to TRIGONOMETRIC_FUNCTIONS_TABLE'LENGTH-1;
 begin
     if rising_edge(clk) then
        if counterForSpriteRotationUpdate = counterForSpriteRotationUpdate'HIGH then
-          counterForSpriteRotationUpdate <= 0;
+          counterForSpriteRotationUpdate := 0;
           if sRotationClockwise then
-              if sRotation = ZERO then
-                sRotation <= HALF_PI;
-              elsif sRotation = HALF_PI then
-                sRotation <= PI;
-              elsif sRotation = PI then
-                sRotation <= THREE_HALFS_PI;
+              if indexForSpriteRotation = indexForSpriteRotation'HIGH-1 then
+                 indexForSpriteRotation := 0;
+                 sRotation <= TRIGONOMETRIC_FUNCTIONS_TABLE(indexForSpriteRotation).angle;
               else
-                sRotation <= ZERO;
+                 indexForSpriteRotation := indexForSpriteRotation + 1;
               end if;
           else
-              if sRotation = ZERO then
-                sRotation <= THREE_HALFS_PI;
-              elsif sRotation = THREE_HALFS_PI then
-                sRotation <= PI;
-              elsif sRotation = PI then
-                sRotation <= HALF_PI;
+              if indexForSpriteRotation = 1 then
+                 indexForSpriteRotation := indexForSpriteRotation'HIGH;
+                 sRotation <= TRIGONOMETRIC_FUNCTIONS_TABLE(indexForSpriteRotation).angle;
               else
-                sRotation <= ZERO;
+                 indexForSpriteRotation := indexForSpriteRotation - 1;
               end if;
           end if;
        else
-          counterForSpriteRotationUpdate <= counterForSpriteRotationUpdate + 1;
+          counterForSpriteRotationUpdate := counterForSpriteRotationUpdate + 1;
        end if;
 
        if sCounterForRotationChange = sCounterForRotationChange'HIGH then
@@ -181,10 +172,8 @@ generic map(SPRITE_WIDTH => 11,
                              &"00011111000")
 port map (inClock       => vga_clk,
           inEnabled     => sSmiley1Enabled,
-          inSpritePosX  => squareXVector,
-          inSpritePosY  => squareYVector,
-          inCursorX     => hPosVector,
-          inCursorY     => vPosVector,
+          inSpritePos   => spritePosition,
+          inCursorPos   => cursorPosition,
           outShouldDraw => should_draw_square1,
           inRotation => sRotation);
 
@@ -215,10 +204,8 @@ generic map(SPRITE_WIDTH => 11,
            --                   &"00011111000")
 port map (inClock       => vga_clk,
           inEnabled     => not sSmiley1Enabled,
-          inSpritePosX  => squareXVector,
-          inSpritePosY  => squareYVector,
-          inCursorX     => hPosVector,
-          inCursorY     => vPosVector,
+          inSpritePos   => spritePosition,
+          inCursorPos   => cursorPosition,
           outShouldDraw => should_draw_square2,
           inRotation => sRotation);
 square_x <= xPosSprite;

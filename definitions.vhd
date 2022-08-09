@@ -57,11 +57,13 @@ package definitions is
      );
 
      function translateOriginToCenterOfSprite (sprite_size  : Size2D;
-                                              position      : Pos2D;
-                                              rotation      : AngleType := (others=>'0')) return Pos2D;
+                                              position      : Pos2D) 
+              return Pos2D;
+
      function translateOriginBackToFirstBitCorner(sprite_size   : Size2D;
                                                   position      : Pos2D)
               return Pos2D;
+
      function getTrigonometricFunctionsResult(angle : AngleType)
               return TrigonometricFunctionsResultsRecord;
 
@@ -96,8 +98,7 @@ end package;
 
 package body definitions is
      function translateOriginToCenterOfSprite(sprite_size   : Size2D;
-                                              position      : Pos2D;
-                                              rotation      : AngleType := ( others => '0' ))
+                                              position      : Pos2D)
                                               return Pos2D is
        constant HALF_SPRITE_WIDTH  : integer := sprite_size.width  / 2;
        constant HALF_SPRITE_HEIGHT : integer := sprite_size.height / 2;
