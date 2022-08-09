@@ -67,25 +67,26 @@ constant MARGIN_Y1 : integer := MARGIN_Y0 + SCREEN_SIZE.height;
   end component;
 begin
 
-updateCursorPosition : process (clk, hpos, vpos)
-variable x,y : integer := 0;
-variable needsUpdate : boolean := false;
-begin
-   if rising_edge(clk) then
-      needsUpdate := false;
-      if hpos > MARGIN_X0 and hpos < MARGIN_X1 then
-        x := hpos - MARGIN_X0;
-        needsUpdate := true;
-      end if;
-      if vpos > MARGIN_Y0 and vpos < MARGIN_Y1 then
-        needsUpdate := true;
-      end if;
-      if needsUpdate then
-         cursorPosition <= (x,y);
-      end if;
-   end if;
-end process;
---spritePosition <= (square_x, square_y);
+ -- updateCursorPosition : process (clk, hpos, vpos)
+ -- variable x,y : integer := 0;
+ -- variable needsUpdate : boolean := false;
+ -- begin
+ --    if rising_edge(clk) then
+ --       needsUpdate := false;
+ --       if hpos > MARGIN_X0 and hpos < MARGIN_X1 then
+ --         x := hpos - MARGIN_X0;
+ --         needsUpdate := true;
+ --       end if;
+ --       if vpos > MARGIN_Y0 and vpos < MARGIN_Y1 then
+ --         needsUpdate := true;
+ --       end if;
+ --       if needsUpdate then
+ --          cursorPosition <= (x,y);
+ --       end if;
+ --    end if;
+ -- end process;
+
+ cursorPosition <= (hpos - MARGIN_X0, vpos - MARGIN_Y0);
 
 mySprite : entity work.sprite(logic)
 generic map(SCREEN_SIZE => SCREEN_SIZE,
