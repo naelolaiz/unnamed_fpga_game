@@ -55,13 +55,13 @@ begin
        if rising_edge(inClock) then
           if counterForSpriteRotationUpdate = sCurrentRotationSpeed.update_period then
              counterForSpriteRotationUpdate := 0;
-             if sCurrentRotationSpeed.index_inc < 0 then -- counterclockwise
+             if sCurrentRotationSpeed.index_inc > 0 then
                  if indexForSpriteRotation = indexForSpriteRotation'HIGH then
                     indexForSpriteRotation := 0;
                  else
                     indexForSpriteRotation := indexForSpriteRotation + sCurrentRotationSpeed.index_inc;
                  end if;
-             elsif sCurrentRotationSpeed.index_inc > 0 then -- clockwise
+             elsif sCurrentRotationSpeed.index_inc < 0 then
                  if indexForSpriteRotation = 0 then
                     indexForSpriteRotation := indexForSpriteRotation'HIGH;
                  else
@@ -82,9 +82,9 @@ begin
       variable collisionDetected : boolean := false;
    begin
       if rising_edge(inClock) then
-         collisionDetected := false;
          if counterForSpritePositionUpdate = counterForSpritePositionUpdate'HIGH then
             counterForSpritePositionUpdate := 0;
+            collisionDetected := false;
            -- check for colission with the screen
             -- TODO: implement vectors sum
             nextPositionToTest := ((sSpritePos.x + sCurrentSpeed.x),

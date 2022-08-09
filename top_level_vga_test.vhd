@@ -69,9 +69,9 @@ cursorPosition <= (hpos - SCREEN_MARGINS.x, vpos - SCREEN_MARGINS.y);
 mySprite : entity work.sprite(logic)
 generic map(SCREEN_SIZE => SCREEN_SIZE,
             INITIAL_POSITION => (200,200),
-            INITIAL_SPEED => (1, 1, 200000),
+            INITIAL_SPEED => (1, 1, 150000),
             SPRITE_WIDTH => 11,
-            SCALE => 16,
+            SCALE => 7,
             SPRITE_CONTENT => "00011111000"
                              &"00100000100"
                              &"01000000010"
@@ -83,7 +83,7 @@ generic map(SCREEN_SIZE => SCREEN_SIZE,
                              &"01001110010"
                              &"00100000100"
                              &"00011111000",
-            INITIAL_ROTATION_SPEED => (1, 10000000))
+            INITIAL_ROTATION_SPEED => (1, 2000000))
 port map (inClock       => vga_clk,
           inEnabled     => true,
           --inSpritePos   => spritePosition,
