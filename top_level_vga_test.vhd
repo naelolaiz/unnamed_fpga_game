@@ -17,6 +17,14 @@ architecture rtl of top_level_vga_test is
   constant SQUARE_SIZE  : integer := 30; -- In pixels
   constant SQUARE_SPEED : integer := 100_000;
 
+
+constant SCREEN_SIZE : Size2D  := (1024,768);
+constant MARGIN_X0 : integer := 30;
+constant MARGIN_X1 : integer := MARGIN_X0 + SCREEN_SIZE.width;
+constant MARGIN_Y0 : integer := 10;
+constant MARGIN_Y1 : integer := MARGIN_Y0 + SCREEN_SIZE.height;
+
+
   -- VGA Clock - 25 MHz clock derived from the 50MHz built-in clock
   signal vga_clk : std_logic;
 
@@ -25,12 +33,12 @@ architecture rtl of top_level_vga_test is
   signal vga_hsync, vga_vsync  : std_logic;
   signal hpos, vpos            : integer;
 
-  signal square_x           : integer range HDATA_BEGIN to HDATA_END := HDATA_BEGIN + H_HALF - SQUARE_SIZE/2;
-  signal square_y           : integer range VDATA_BEGIN to VDATA_END := VDATA_BEGIN + V_HALF - SQUARE_SIZE/2;
+--  signal square_x           : integer range HDATA_BEGIN to HDATA_END := HDATA_BEGIN + H_HALF - SQUARE_SIZE/2;
+--  signal square_y           : integer range VDATA_BEGIN to VDATA_END := VDATA_BEGIN + V_HALF - SQUARE_SIZE/2;
 
   signal cursorPosition      : Pos2D;
   signal hPosVector, vPosVector : std_logic_vector(15 downto 0) := (others => '0');
-  signal spritePosition      : Pos2D;
+--  signal spritePosition      : Pos2D;
 
   signal square_speed_count : integer range 0 to SQUARE_SPEED        := 0;
   signal should_move_square : boolean;
@@ -38,8 +46,6 @@ architecture rtl of top_level_vga_test is
   signal should_draw_square2 : boolean;
 
   -- nael
-  signal counterForSpritePositionUpdate : integer range 0 to 180E3  := 0;
-  signal ticksForSpritePositionUpdate : std_logic := '0';
   signal ticksForDynamicTextPositionUpdate : std_logic := '0';
   signal xPosSprite, yPosSprite : integer := 0;
   signal xPosNael, yPosNael : integer := 5;
@@ -61,64 +67,31 @@ architecture rtl of top_level_vga_test is
   end component;
 begin
 
-cursorPosition <= (hpos, vpos);
-spritePosition <= (square_x, square_y);
-
-TickProcess : process (clk)
+updateCursorPosition : process (clk, hpos, vpos)
+variable x,y : integer := 0;
+variable needsUpdate : boolean := false;
 begin
-    if (rising_edge(clk)) then
-       if counterForSpritePositionUpdate = counterForSpritePositionUpdate'HIGH then
-          counterForSpritePositionUpdate <= 0;
-	  ticksForSpritePositionUpdate <= not ticksForSpritePositionUpdate;
-       else
-          counterForSpritePositionUpdate <= counterForSpritePositionUpdate + 1;
-       end if;
-    end if;
-end process;
-
-moveSprite : process (ticksForSpritePositionUpdate)
-begin
-   if rising_edge(ticksForSpritePositionUpdate) then
-      if xDirectionSprite then
-         if xPosSprite = HDATA_END - SQUARE_SIZE then
-	    xDirectionSprite <= not xDirectionSprite;
-	    rgb_square_color <= rgb_square_color(1 downto 0) & rgb_square_color(2);
-	 else
-	    xPosSprite <= xPosSprite + 1;
-	 end if;
-      else
-         if xPosSprite = HDATA_BEGIN then -- 300 then --HDATA_BEGIN + HSYNC_END then
-	    xDirectionSprite <= not xDirectionSprite;
-	    rgb_square_color <= rgb_square_color(0) & rgb_square_color(2 downto 1);
-	 else
-	    xPosSprite <= xPosSprite - 1;
-	 end if;
+   if rising_edge(clk) then
+      needsUpdate := false;
+      if hpos > MARGIN_X0 and hpos < MARGIN_X1 then
+        x := hpos - MARGIN_X0;
+        needsUpdate := true;
       end if;
-      if yDirectionSprite then
-         if yPosSprite = VDATA_END - SQUARE_SIZE - 30 then
-	    -- yPosSprite <= 220;
-	    yDirectionSprite <= not yDirectionSprite;
-	    rgb_square_color <= rgb_square_color(2) & rgb_square_color(0) & rgb_square_color(1);
-	 else
-	    yPosSprite <= yPosSprite + 1;
-	 end if;
-      else
-         if yPosSprite = VDATA_BEGIN then
-	    -- yPosSprite <= 360;
-	    yDirectionSprite <= not yDirectionSprite;
-	    rgb_square_color <= rgb_square_color(1) & rgb_square_color(2) & rgb_square_color(0);
-	 else
-	    yPosSprite <= yPosSprite - 1;
-	 end if;
+      if vpos > MARGIN_Y0 and vpos < MARGIN_Y1 then
+        needsUpdate := true;
       end if;
-      should_move_square <= true;
-   else
-      should_move_square <= false;
+      if needsUpdate then
+         cursorPosition <= (x,y);
+      end if;
    end if;
 end process;
+--spritePosition <= (square_x, square_y);
 
 mySprite : entity work.sprite(logic)
-generic map(SPRITE_WIDTH => 11,
+generic map(SCREEN_SIZE => SCREEN_SIZE,
+            INITIAL_POSITION => (200,200),
+            INITIAL_SPEED => (1, 1, 200000),
+            SPRITE_WIDTH => 11,
             SCALE => 16,
             SPRITE_CONTENT => "00011111000"
                              &"00100000100"
@@ -134,7 +107,7 @@ generic map(SPRITE_WIDTH => 11,
             ROTATION_UPDATE_PERIOD => 10000000 )
 port map (inClock       => vga_clk,
           inEnabled     => true,
-          inSpritePos   => spritePosition,
+          --inSpritePos   => spritePosition,
           inCursorPos   => cursorPosition,
           outShouldDraw => should_draw_square1);
 
@@ -168,8 +141,8 @@ port map (inClock       => vga_clk,
  --           inSpritePos   => spritePosition,
  --           inCursorPos   => cursorPosition,
  --           outShouldDraw => should_draw_square2);
-square_x <= xPosSprite;
-square_y <= yPosSprite;
+--square_x <= xPosSprite;
+--square_y <= yPosSprite;
 
   controller : VgaController port map(
     clk     => vga_clk,

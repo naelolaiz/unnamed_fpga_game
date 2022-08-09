@@ -13,6 +13,13 @@ package definitions is
       y: integer;
    end record;
 
+   type Speed2D is
+   record
+      x: integer;
+      y: integer;
+      update_period : integer;
+   end record;
+
    type Size2D is
    record
       width  : integer;
