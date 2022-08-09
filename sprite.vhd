@@ -17,12 +17,15 @@ entity sprite is
                                                & "1111111"
                                                & "0011100"
                                                & "0101010"
-                                               & "1001001");
+                                               & "1001001";
+            INITIAL_ROTATION         : AngleType := (others=>'0');
+            ROTATION_UPDATE_PERIOD   : integer := 0 -- rotation speed: counter for input clock to increase angle. Zero for static. Negative for counterclockwise.
+            );
    port( inClock : in  std_logic;
          inEnabled : in boolean;
          inSpritePos   : Pos2D; -- center position of sprite
          inCursorPos   : Pos2D; -- position to check
-         inRotation    : in AngleType;
+         --inRotation    : in AngleType;
          outShouldDraw : out boolean);
 end;
 
@@ -35,7 +38,39 @@ architecture logic of sprite is
    constant C_HALF_SCALED_WIDTH  : integer := SPRITE_SIZE.width * SCALE / 2;
    constant C_HALF_SCALED_HEIGHT : integer := SPRITE_SIZE.height * SCALE / 2;
 
+   signal sRotation : AngleType := INITIAL_ROTATION;
+
 begin
+
+   rotateSprite : process  (inClock)
+   variable counterForSpriteRotationUpdate : integer range 0 to ROTATION_UPDATE_PERIOD := 0;
+   variable indexForSpriteRotation : integer range 0 to TRIGONOMETRIC_FUNCTIONS_TABLE'LENGTH-1;
+   begin
+       if rising_edge(inClock) then
+          if counterForSpriteRotationUpdate = counterForSpriteRotationUpdate'HIGH then
+             counterForSpriteRotationUpdate := 0;
+             if ROTATION_UPDATE_PERIOD > 0 then -- clockwise
+                 if indexForSpriteRotation = indexForSpriteRotation'HIGH-1 then
+                    indexForSpriteRotation := 0;
+                    sRotation <= TRIGONOMETRIC_FUNCTIONS_TABLE(indexForSpriteRotation).angle;
+                 else
+                    indexForSpriteRotation := indexForSpriteRotation + 1;
+                 end if;
+             elsif ROTATION_UPDATE_PERIOD < 0 then -- counterclockwise
+                 if indexForSpriteRotation = 1 then
+                    indexForSpriteRotation := indexForSpriteRotation'HIGH;
+                    sRotation <= TRIGONOMETRIC_FUNCTIONS_TABLE(indexForSpriteRotation).angle;
+                 else
+                    indexForSpriteRotation := indexForSpriteRotation - 1;
+                 end if;
+             else
+             end if;
+          else
+             counterForSpriteRotationUpdate := counterForSpriteRotationUpdate + 1;
+          end if;
+   
+       end if;
+   end process;
 
   RefreshsSpriteContent : process (inClock)
     variable oneDimensionalPointer: integer := 0;
@@ -74,7 +109,7 @@ begin
              -- for rotation, first we do a translation to have the origin in the center of the sprite
              vTranslatedCursor := translateOriginToCenterOfSprite(SPRITE_SIZE, vTranslatedCursor);
              -- then we apply the rotation
-             -- vTranslatedCursor := rotate(SPRITE_SIZE, vTranslatedCursor, inRotation);
+             vTranslatedCursor := rotate(SPRITE_SIZE, vTranslatedCursor, sRotation);
              -- and translate the origin back
              vTranslatedCursor := translateOriginBackToFirstBitCorner(SPRITE_SIZE, vTranslatedCursor);
              -- now we check the sprite content with the transformed cursor

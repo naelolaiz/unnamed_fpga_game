@@ -46,9 +46,6 @@ architecture rtl of top_level_vga_test is
   signal xDirectionSprite, yDirectionSprite : boolean := true; 
   signal xDirectionText, yDirectionText : boolean := true; 
 
-  signal sRotation : AngleType := (others=>'0');
-  signal sRotationClockwise : boolean := true;
-  signal sCounterForRotationChange : integer range 0 to 85E6:= 0;
   signal sSmiley1Enabled : boolean := true;
 
   component VgaController is
@@ -75,42 +72,6 @@ begin
 	  ticksForSpritePositionUpdate <= not ticksForSpritePositionUpdate;
        else
           counterForSpritePositionUpdate <= counterForSpritePositionUpdate + 1;
-       end if;
-    end if;
-end process;
-
-rotateSprite : process  (clk, sRotationClockwise)
-variable counterForSpriteRotationUpdate : integer range 0 to 10E6 := 0;
-variable indexForSpriteRotation : integer range 0 to TRIGONOMETRIC_FUNCTIONS_TABLE'LENGTH-1;
-begin
-    if rising_edge(clk) then
-       if counterForSpriteRotationUpdate = counterForSpriteRotationUpdate'HIGH then
-          counterForSpriteRotationUpdate := 0;
-          if sRotationClockwise then
-              if indexForSpriteRotation = indexForSpriteRotation'HIGH-1 then
-                 indexForSpriteRotation := 0;
-                 sRotation <= TRIGONOMETRIC_FUNCTIONS_TABLE(indexForSpriteRotation).angle;
-              else
-                 indexForSpriteRotation := indexForSpriteRotation + 1;
-              end if;
-          else
-              if indexForSpriteRotation = 1 then
-                 indexForSpriteRotation := indexForSpriteRotation'HIGH;
-                 sRotation <= TRIGONOMETRIC_FUNCTIONS_TABLE(indexForSpriteRotation).angle;
-              else
-                 indexForSpriteRotation := indexForSpriteRotation - 1;
-              end if;
-          end if;
-       else
-          counterForSpriteRotationUpdate := counterForSpriteRotationUpdate + 1;
-       end if;
-
-       if sCounterForRotationChange = sCounterForRotationChange'HIGH then
-          sCounterForRotationChange <= 0;
-          sRotationClockwise <= not sRotationClockwise;
-          sSmiley1Enabled <= not sSmiley1Enabled;
-       else
-          sCounterForRotationChange <= sCounterForRotationChange + 1;
        end if;
     end if;
 end process;
@@ -174,8 +135,7 @@ port map (inClock       => vga_clk,
           inEnabled     => true,
           inSpritePos   => spritePosition,
           inCursorPos   => cursorPosition,
-          outShouldDraw => should_draw_square1,
-          inRotation => sRotation);
+          outShouldDraw => should_draw_square1);
 
 mySprite2 : entity work.sprite(logic)
 generic map(SPRITE_WIDTH => 11,
@@ -206,8 +166,7 @@ port map (inClock       => vga_clk,
           inEnabled     => not sSmiley1Enabled,
           inSpritePos   => spritePosition,
           inCursorPos   => cursorPosition,
-          outShouldDraw => should_draw_square2,
-          inRotation => sRotation);
+          outShouldDraw => should_draw_square2);
 square_x <= xPosSprite;
 square_y <= yPosSprite;
 
